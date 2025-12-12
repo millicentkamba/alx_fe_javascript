@@ -3,99 +3,295 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dynamic Quote Generator</title>
+  <title>Dynamic Quote Generator with Filtering</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 800px;
+      max-width: 900px;
       margin: 50px auto;
       padding: 20px;
-      background-color: #f4f4f4;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    
+    .container {
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
     
     h1 {
       color: #333;
       text-align: center;
+      margin-bottom: 30px;
+      font-size: 2.5em;
+    }
+    
+    .filter-section {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .filter-section h3 {
+      margin-top: 0;
+      color: #333;
+      font-size: 1.2em;
+      margin-bottom: 15px;
+    }
+    
+    #categoryFilter {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border: 2px solid #667eea;
+      border-radius: 8px;
+      background-color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    #categoryFilter:focus {
+      outline: none;
+      border-color: #764ba2;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    #categoryFilter:hover {
+      border-color: #764ba2;
+    }
+    
+    .stats {
+      text-align: center;
+      margin: 20px 0;
+      color: #555;
+      font-size: 0.95em;
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+    }
+    
+    .stat-item {
+      background: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      margin: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-item strong {
+      color: #667eea;
+      font-size: 1.2em;
     }
     
     #quoteDisplay {
-      background-color: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      margin: 20px 0;
-      min-height: 100px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      margin: 25px 0;
+      min-height: 120px;
       display: flex;
       flex-direction: column;
       justify-content: center;
+      transition: transform 0.3s ease;
+    }
+    
+    #quoteDisplay:hover {
+      transform: translateY(-5px);
     }
     
     .quote-text {
-      font-size: 1.4em;
+      font-size: 1.5em;
       font-style: italic;
-      color: #555;
-      margin-bottom: 10px;
+      color: #2c3e50;
+      margin-bottom: 15px;
+      line-height: 1.6;
     }
     
     .quote-category {
-      font-size: 1em;
-      color: #888;
+      font-size: 1.1em;
+      color: #7f8c8d;
       text-align: right;
+      font-weight: 600;
+    }
+    
+    .no-quotes-message {
+      text-align: center;
+      color: #e74c3c;
+      font-size: 1.2em;
+      padding: 20px;
     }
     
     button {
-      background-color: #4CAF50;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      padding: 12px 24px;
+      padding: 12px 28px;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
       cursor: pointer;
       font-size: 16px;
-      margin: 5px;
+      font-weight: 600;
+      margin: 8px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     
     button:hover {
-      background-color: #45a049;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
     }
     
-    #newQuote {
-      display: block;
-      margin: 20px auto;
+    button:active {
+      transform: translateY(0);
+    }
+    
+    .button-group {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+    
+    .export-btn {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+    
+    .import-label {
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+      display: inline-block;
+      padding: 12px 28px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      margin: 8px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .import-label:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    input[type="file"] {
+      display: none;
     }
     
     .add-quote-form {
-      background-color: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      background-color: #f8f9fa;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       margin-top: 30px;
     }
     
     .add-quote-form h2 {
       color: #333;
       margin-top: 0;
+      margin-bottom: 20px;
+      text-align: center;
     }
     
     input[type="text"] {
-      width: calc(100% - 20px);
-      padding: 10px;
+      width: calc(100% - 24px);
+      padding: 12px;
       margin: 10px 0;
-      border: 1px solid #ddd;
-      border-radius: 5px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
       font-size: 14px;
+      transition: border-color 0.3s ease;
+    }
+    
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #667eea;
     }
     
     .form-buttons {
       text-align: center;
+      margin-top: 15px;
+    }
+    
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 1000;
+      max-width: 300px;
+    }
+    
+    .notification.show {
+      opacity: 1;
+    }
+    
+    .filter-indicator {
+      background: #667eea;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      display: inline-block;
+      margin: 10px 0;
+      font-size: 0.9em;
+      font-weight: 600;
     }
   </style>
 </head>
 <body>
-  <h1>Dynamic Quote Generator</h1>
-  <div id="quoteDisplay"></div>
-  <button id="newQuote">Show New Quote</button>
+  <div class="container">
+    <h1>📚 Dynamic Quote Generator</h1>
+    
+    <!-- Category Filter Section -->
+    <div class="filter-section">
+      <h3>🔍 Filter by Category</h3>
+      <select id="categoryFilter">
+        <option value="all">All Categories</option>
+        <!-- Dynamically populated categories -->
+      </select>
+      <div id="filterIndicator" style="margin-top: 10px; text-align: center;"></div>
+    </div>
+    
+    <!-- Statistics Section -->
+    <div class="stats" id="quoteStats">
+      <div class="stat-item">
+        <p>Total Quotes: <strong id="quoteCount">0</strong></p>
+      </div>
+      <div class="stat-item">
+        <p>Filtered Quotes: <strong id="filteredCount">0</strong></p>
+      </div>
+      <div class="stat-item">
+        <p>Categories: <strong id="categoryCount">0</strong></p>
+      </div>
+    </div>
+    
+    <!-- Quote Display -->
+    <div id="quoteDisplay"></div>
+    
+    <!-- Action Buttons -->
+    <div class="button-group">
+      <button id="newQuote">🔄 Show New Quote</button>
+      <button id="exportQuotes" class="export-btn">💾 Export Quotes</button>
+      <label for="importFile" class="import-label">📁 Import Quotes</label>
+      <input type="file" id="importFile" accept=".json" />
+    </div>
+    
+    <!-- Add Quote Form -->
+    <div id="addQuoteFormContainer"></div>
+  </div>
   
-  <div id="addQuoteFormContainer"></div>
+  <!-- Notification -->
+  <div id="notification" class="notification"></div>
   
   <script src="script.js"></script>
 </body>
