@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dynamic Quote Generator with Filtering</title>
+  <title>Dynamic Quote Generator with Server Sync</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -28,6 +28,57 @@
       font-size: 2.5em;
     }
     
+    /* Sync Status Bar */
+    .sync-status {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .sync-status.syncing {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .sync-status.error {
+      background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+    }
+    
+    .sync-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .sync-icon {
+      font-size: 1.5em;
+      animation: rotate 2s linear infinite;
+    }
+    
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .sync-status:not(.syncing) .sync-icon {
+      animation: none;
+    }
+    
+    .sync-text {
+      font-size: 0.95em;
+    }
+    
+    .sync-time {
+      font-size: 0.85em;
+      opacity: 0.9;
+    }
+    
+    /* Filter Section */
     .filter-section {
       background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
       padding: 20px;
@@ -64,6 +115,7 @@
       border-color: #764ba2;
     }
     
+    /* Statistics */
     .stats {
       text-align: center;
       margin: 20px 0;
@@ -87,6 +139,7 @@
       font-size: 1.2em;
     }
     
+    /* Quote Display */
     #quoteDisplay {
       background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
       padding: 40px;
@@ -126,6 +179,7 @@
       padding: 20px;
     }
     
+    /* Buttons */
     button {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
@@ -149,6 +203,12 @@
       transform: translateY(0);
     }
     
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
     .button-group {
       display: flex;
       justify-content: center;
@@ -158,6 +218,10 @@
     
     .export-btn {
       background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+    
+    .sync-btn {
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
     }
     
     .import-label {
@@ -182,6 +246,7 @@
       display: none;
     }
     
+    /* Add Quote Form */
     .add-quote-form {
       background-color: #f8f9fa;
       padding: 25px;
@@ -217,6 +282,7 @@
       margin-top: 15px;
     }
     
+    /* Notification */
     .notification {
       position: fixed;
       top: 20px;
@@ -236,6 +302,91 @@
       opacity: 1;
     }
     
+    /* Conflict Resolution Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      animation: fadeIn 0.3s;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .modal-content {
+      background-color: white;
+      margin: 5% auto;
+      padding: 30px;
+      border-radius: 15px;
+      width: 80%;
+      max-width: 600px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      animation: slideDown 0.3s;
+    }
+    
+    @keyframes slideDown {
+      from {
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #f0f0f0;
+      padding-bottom: 15px;
+    }
+    
+    .modal-header h2 {
+      margin: 0;
+      color: #333;
+    }
+    
+    .close {
+      color: #aaa;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: color 0.3s;
+    }
+    
+    .close:hover {
+      color: #000;
+    }
+    
+    .conflict-item {
+      background: #f8f9fa;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+    }
+    
+    .conflict-choice {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .conflict-choice button {
+      flex: 1;
+      margin: 0;
+    }
+    
     .filter-indicator {
       background: #667eea;
       color: white;
@@ -252,12 +403,23 @@
   <div class="container">
     <h1>📚 Dynamic Quote Generator</h1>
     
+    <!-- Sync Status Bar -->
+    <div id="syncStatus" class="sync-status">
+      <div class="sync-info">
+        <span class="sync-icon">🔄</span>
+        <div>
+          <div class="sync-text" id="syncText">Ready to sync</div>
+          <div class="sync-time" id="syncTime"></div>
+        </div>
+      </div>
+      <button id="syncButton" class="sync-btn">🔄 Sync Now</button>
+    </div>
+    
     <!-- Category Filter Section -->
     <div class="filter-section">
       <h3>🔍 Filter by Category</h3>
       <select id="categoryFilter">
         <option value="all">All Categories</option>
-        <!-- Dynamically populated categories -->
       </select>
       <div id="filterIndicator" style="margin-top: 10px; text-align: center;"></div>
     </div>
@@ -272,6 +434,9 @@
       </div>
       <div class="stat-item">
         <p>Categories: <strong id="categoryCount">0</strong></p>
+      </div>
+      <div class="stat-item">
+        <p>Server Quotes: <strong id="serverCount">0</strong></p>
       </div>
     </div>
     
@@ -292,6 +457,22 @@
   
   <!-- Notification -->
   <div id="notification" class="notification"></div>
+  
+  <!-- Conflict Resolution Modal -->
+  <div id="conflictModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>⚠️ Sync Conflicts Detected</h2>
+        <span class="close" onclick="closeConflictModal()">&times;</span>
+      </div>
+      <p>The following conflicts were detected between local and server data:</p>
+      <div id="conflictList"></div>
+      <div style="text-align: center; margin-top: 20px;">
+        <button onclick="resolveAllConflicts('server')">Use All Server Data</button>
+        <button onclick="resolveAllConflicts('local')">Keep All Local Data</button>
+      </div>
+    </div>
+  </div>
   
   <script src="script.js"></script>
 </body>
