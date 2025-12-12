@@ -412,15 +412,24 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Add event listener to the "Show New Quote" button
   const newQuoteButton = document.getElementById('newQuote');
-  newQuoteButton.addEventListener('click', showRandomQuote);
+  if (newQuoteButton) {
+    newQuoteButton.addEventListener('click', showRandomQuote);
+    console.log('✓ Show New Quote button event listener attached');
+  }
   
   // Add event listener to the export button
   const exportButton = document.getElementById('exportQuotes');
-  exportButton.addEventListener('click', exportToJsonFile);
+  if (exportButton) {
+    exportButton.addEventListener('click', exportToJsonFile);
+    console.log('✓ Export button event listener attached');
+  }
   
   // Add event listener to the file input
   const importFileInput = document.getElementById('importFile');
-  importFileInput.addEventListener('change', importFromJsonFile);
+  if (importFileInput) {
+    importFileInput.addEventListener('change', importFromJsonFile);
+    console.log('✓ Import file input event listener attached');
+  }
   
   // Create the add quote form
   createAddQuoteForm();
@@ -437,6 +446,8 @@ document.addEventListener('DOMContentLoaded', function() {
   
   console.log('Application initialized successfully');
   console.log('Total quotes available:', quotes.length);
+  console.log('Export function available:', typeof exportToJsonFile === 'function');
+  console.log('Import function available:', typeof importFromJsonFile === 'function');
 });
 
 // ============================================================================
